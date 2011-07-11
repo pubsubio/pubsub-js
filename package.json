@@ -1,0 +1,8 @@
+{
+ "name":"pubsub.io",
+ "version":"0.1.0",
+ "description":"Pubsub.io client library",
+ "contributors": ["Ian Jorgensen <jorgensen.ian@gmail.com>","Mathias Buus <mathiasbuss@gmail.com>"],
+ "main":"./pubsub.io.js",
+ "dependencies":{"json-sockets":">=0.1.0"}
+}
