@@ -1,20 +1,42 @@
-/*var val = '12 +2';
-
-//console.log('11:'.match(/(\d{1,2})(?!:)/));
-console.log('mond 10 aug 11:00:--'.match(/(\d{1,2})(?:[^:0-9]|$)?/).slice(1));
-
-var template = /^(?:(mon|tue|wed|thu|fri|sat|sun)\w*)?,?\s*(\d{1,2}(?:[^:0-9]|$))?\s*([a-z]+)?\s*(\d{4})?\s*([\d|-]{1,2}:[\d|-]{1,2}:[\d|-]{1,2})?\s*([+-]\d*\.?\d+)?/i;
-var matches = val.match(template);
-console.log(matches.slice(1));
-*/
 var pubsub = require('./pubsub.io').connect('localhost:10547');
 
-pubsub.subscribe({time:{$datetime:'02:00:-- +2'}},function(doc) {
+//datetime
+/*
+pubsub.subscribe({time:{$datetime:'Wednesday 2010'}},function(doc) {
 	console.log(doc);
 });
 
 var tick = function() {
-	pubsub.publish({time:new Date().toString()});
+	pubsub.publish({time:new Date()});
 };
 
 setInterval(tick,1000);
+*/
+//select
+/*
+pubsub.subscribe({id:0,username:'ian'},{username:1,age:1},function(doc) {
+	console.log(JSON.stringify(doc));
+});	
+
+pubsub.publish({id:0,username:'ian',age:27});
+*/
+
+
+//distance
+/*
+//berlin
+pubsub.subscribe({bla: {$distance: {center: {lon: 52.523, lat: 13.412}, radius:'800 km'}}}, function(doc) {
+	console.log(JSON.stringify(doc.bla) + ' is within the given radius of Berlin');
+});
+
+//oslo
+pubsub.publish({bla:{lon: 59.914,lat: 10.752}});
+*/
+/*
+pubsub.subscribe({id:{$gt:10}}, function(doc) {
+	console.log(JSON.stringify(doc));
+});
+
+pubsub.publish({id:10});
+pubsub.publish({hello:'eOrld'});
+*/

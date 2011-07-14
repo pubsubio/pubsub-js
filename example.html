@@ -1,10 +1,11 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<script src="pubsub.io.js"></script>
+		<script src='http://mudhub.org/m/jQuery,pubsub.io,extras'></script>
 		<script>
-			var pubsub = pubsub.connect();
-			
+			var $ = require('jQuery');
+			var pubsub = require('pubsub.io').connect('localhost:9999');
+			/*
 			var ian = {$signed:'MA--!nl7rm*UPQlTNSt0*a*q3fS3JpVI-',value:'ian'};
 			var mathias = {$signed:'MA--!5AayWn3njcKYC0vsFaihYf8Tpyc-',value:'mathias'};
 			
@@ -19,7 +20,45 @@
 			
 			pubsub.publish({from:mathias,to:auth.ian,message:'hi ian'});
 			pubsub.publish({from:ian,to:auth.mathias,message:'hi mathias'});
-			
+			*/
+
+			//datetime
+			/*pubsub.subscribe({time:{$datetime:'15:56:-- +2'}},function(doc) {
+				console.log(doc);
+			});
+
+			var tick = function() {
+				pubsub.publish({time:new Date()});
+			};
+
+			setInterval(tick,1000);*/
+
+			//select
+			/*
+			pubsub.subscribe({id:0,username:/ian/i},{username:1},function(doc) {
+				console.log(JSON.stringify(doc));
+			});	
+
+			pubsub.publish({id:0,username:'ian',age:27});
+			*/
+
+
+			//distance
+			/*
+			//berlin
+			pubsub.subscribe({point: {$distance: {center: {lon: 52.523, lat: 13.412}, radius:'900 km'}}}, function(doc) {
+				console.log(JSON.stringify(doc.point) + ' is within the given radius of Berlin');
+			});
+
+			//oslo
+			pubsub.publish({point:{lon: 59.914,lat: 10.752}});
+			*/
+
+			var s = pubsub.subscribe({},function(doc) {
+				console.log(JSON.stringify(doc));
+			});
+
+			pubsub.publish({hello:'world'});			
 		</script>
 	</head>
 	<body>Look at the console!</body>
