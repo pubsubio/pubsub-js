@@ -1234,9 +1234,9 @@ var normalize = function(host) {
 	
 	return {
 		host: result[0] || 'localhost',
-		port: parseInt(result[1] || module.browser ? 80 : 10547, 10),
+		port: parseInt(result[1] || (module.browser ? 80 : 10547), 10),
 		sub: result[2] || '/'
-	}
+	};
 };
 
 exports.connect = function(host) {
