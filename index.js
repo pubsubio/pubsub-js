@@ -3,11 +3,24 @@ var common = require('common');
 
 var noop = function() {};
 
-exports.connect = function() {
-	var socket = sockets.connect.apply(sockets, arguments);
+var normalize = function(host) {
+	var result = (host.match(/([^:\/]*)(?::(\d+))?(?:\/(.*))?/) || []).slice(1);
+	
+	return {
+		host: result[0] || 'localhost',
+		port: parseInt(result[1] || module.browser ? 80 : 10547, 10),
+		sub: result[2] || '/'
+	}
+};
+
+exports.connect = function(host) {
+	host = normalize(host || '');
+	var socket = sockets.connect(host.host + ':' + host.port);
 
 	var pubsub = {};
 	var subscriptions = {};	
+	
+	socket.send({sub:host.sub});
 	
 	socket.on('message', function(message) {
 		if (message.name === 'publish') {
