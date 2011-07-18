@@ -8,6 +8,10 @@
 		var socket = sockets.connect('localhost:9999');
 		
 		socket.send({hi:1});
+		socket.send({hi:1});
+		socket.send({hi:1});
+		socket.send({hi:1});
+		socket.send({hi:2});
 		
 		socket.on('message', function(message) {
 			console.log(JSON.stringify(message));
