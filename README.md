@@ -5,10 +5,10 @@ Client implementions for the browser and node.js.
 
 ```js
 // to connect in node.js do:
-var pubsub = require('pubsub').connect('www.pubsub.io');
+var pubsub = require('pubsub.io').connect('hub.pubsub.io');
 
 // to connect in the browser do:
-var pubsub = pubsub.connect('www.pubsub.io');
+var pubsub = pubsub.connect('hub.pubsub.io');
 
 pubsub.subscribe({}, function(doc) {
 	console.log('someone published', doc);
