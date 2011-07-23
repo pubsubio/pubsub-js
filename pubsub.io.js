@@ -68,7 +68,7 @@ var Request = function() {
 	};
 	AJAX.prototype.destroy = noop;
 	
-	if (0 && curl.cors) {
+	if (curl.cors) {
 		return AJAX;
 	}
 		
