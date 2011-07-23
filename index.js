@@ -59,6 +59,7 @@ exports.connect = function(host) {
 		socket.send({name:'subscribe', id:id, query:normalize(query), selection:selection});
 		
 		return function() {
+			delete subscriptions[id];
 			socket.send({name:'unsubscribe', id:id});
 		};
 	};
