@@ -1,6 +1,6 @@
 {
  "name":"pubsub.io",
- "version":"0.1.7",
+ "version":"0.1.8",
  "description":"Pubsub.io client library",
  "contributors": ["Ian Jorgensen <jorgensen.ian@gmail.com>","Mathias Buus <mathiasbuss@gmail.com>"],
  "main":"./index.js",
