@@ -1288,8 +1288,8 @@ exports.connect = function(host) {
 			socket.send({name:'unsubscribe', id:id});
 		};
 	};
-	pubsub.publish = function(doc) {
-		socket.send({name:'publish', doc:doc});
+	pubsub.publish = function(doc, challenge) {
+		socket.send({name:'publish', doc:doc, challenge:challenge});
 	};
 	
 	return pubsub;
