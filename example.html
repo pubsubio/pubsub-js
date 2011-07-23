@@ -1,65 +1,19 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<script src='http://mudhub.org/m/jQuery,pubsub.io,extras'></script>
+		<script src='pubsub.io.js'></script>
 		<script>
-			var $ = require('jQuery');
-			var pubsub = require('pubsub.io').connect('localhost:9999');
-			/*
-			var ian = {$signed:'MA--!nl7rm*UPQlTNSt0*a*q3fS3JpVI-',value:'ian'};
-			var mathias = {$signed:'MA--!5AayWn3njcKYC0vsFaihYf8Tpyc-',value:'mathias'};
-			
-			var auth = pubsub.auth({ian:'user',mathias:'user'});
-			
-			pubsub.subscribe({to:mathias,from:{$authenticated:'user'}},function(doc) {
-				console.log(doc.from, ':', doc.message);
-			});			
-			pubsub.subscribe({to:ian,from:{$authenticated:'user'}},function(doc) {
-				console.log(doc.from, ':', doc.message);
-			});
-			
-			pubsub.publish({from:mathias,to:auth.ian,message:'hi ian'});
-			pubsub.publish({from:ian,to:auth.mathias,message:'hi mathias'});
-			*/
+			window.onload = function() {
+				var pre = document.getElementsByTagName('pre')[0];
+				var pubsub = pubsubio.connect('localhost:9999');
 
-			//datetime
-			/*pubsub.subscribe({time:{$datetime:'15:56:-- +2'}},function(doc) {
-				console.log(doc);
-			});
+				pubsub.subscribe({}, function(doc) {
+					pre.innerHTML = JSON.stringify(doc);
+				});
 
-			var tick = function() {
-				pubsub.publish({time:new Date()});
+				pubsub.publish({hello:'world'});				
 			};
-
-			setInterval(tick,1000);*/
-
-			//select
-			/*
-			pubsub.subscribe({id:0,username:/ian/i},{username:1},function(doc) {
-				console.log(JSON.stringify(doc));
-			});	
-
-			pubsub.publish({id:0,username:'ian',age:27});
-			*/
-
-
-			//distance
-			/*
-			//berlin
-			pubsub.subscribe({point: {$distance: {center: {lon: 52.523, lat: 13.412}, radius:'900 km'}}}, function(doc) {
-				console.log(JSON.stringify(doc.point) + ' is within the given radius of Berlin');
-			});
-
-			//oslo
-			pubsub.publish({point:{lon: 59.914,lat: 10.752}});
-			*/
-
-			var s = pubsub.subscribe({},function(doc) {
-				console.log(JSON.stringify(doc));
-			});
-
-			pubsub.publish({hello:'world'});			
 		</script>
 	</head>
-	<body>Look at the console!</body>
+	<body><pre></pre></body>
 </html>

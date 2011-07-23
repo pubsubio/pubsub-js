@@ -1309,4 +1309,4 @@ if (!module.browser) {
 		};
 	};
 }
-}({browser:true}, window.pubsub = {}));
+}({browser:true}, window.pubsubio = {}));
