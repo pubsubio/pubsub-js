@@ -1200,7 +1200,6 @@ var onload = function(fn) {
 var SocketBuffer = common.emitter(function(host) {
 	var self = this;
 	
-	this.type = CrossBrowser.prototype.type;
 	this._buffer = [];
 	
 	onload(function() {
@@ -1214,6 +1213,7 @@ var SocketBuffer = common.emitter(function(host) {
 			sock.destroy();
 		};
 		
+		self.type = sock.type;
 		self.destroy = function() {
 			destroyed = true;
 		};
