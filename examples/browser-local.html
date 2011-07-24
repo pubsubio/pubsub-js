@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<script src='../pubsub.io.js'></script>
+		<script>
+			window.onload = function() {
+				var pre = document.getElementsByTagName('pre')[0];
+				var pubsub = pubsubio.connect('localhost:9999');
+
+				pubsub.subscribe({}, function(doc) {
+					pre.innerHTML = JSON.stringify(doc);
+				});
+
+				pubsub.publish({hello:'world'});				
+			};
+		</script>
+	</head>
+	<body><pre></pre></body>
+</html>

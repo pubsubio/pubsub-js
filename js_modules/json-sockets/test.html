@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>JSON-Sockets tests</title>
+		<script src='http://code.jquery.com/jquery-latest.js'></script>
+		<link rel='stylesheet' href='http://code.jquery.com/qunit/git/qunit.css' type='text/css' media='screen' />
+		<script type='text/javascript' src='http://code.jquery.com/qunit/git/qunit.js'></script>
+		<script type='text/javascript' src='json-sockets.js'></script>
+		<script>
+			$(document).ready(function(){
+
+				// TODO: REPLACE OK WITH SAME WHERE IT MAKES SENSE
+
+				module('JSON-Sockets');
+
+				test('sockets defined', function() {
+					ok(!!window.sockets, 'sockets is defined');
+				});				
+								
+				asyncTest('open', function() {
+					var socket = sockets.connect('localhost:9999');
+					
+					socket.on('open', function() {
+						$('#qunit-header-type').text('('+socket.type+')');
+						ok(true, 'socket has connected');
+						socket.destroy();
+						start();
+					});
+				});
+				asyncTest('open -> close', function() {
+					var socket = sockets.connect('localhost:9999');
+					
+					socket.on('open', function() {
+						socket.destroy();					
+					});
+					socket.on('close', function() {
+						ok(true, 'socket was closed');
+						start();
+					});
+				});
+				asyncTest('close', function() {
+					var socket = sockets.connect('localhost:9999');
+					
+					socket.destroy();
+					socket.on('close', function() {
+						ok(true, 'socket was closed');
+						start();
+					});
+				});
+				asyncTest('echo', function() {
+					var socket = sockets.connect('localhost:9999');
+					var echo = 'meh';
+					
+					socket.on('message', function(message) {
+						ok(message.echo === echo, 'echoing');
+						socket.destroy();						
+						start();
+					});
+					
+					socket.send({method:'echo', echo:echo});
+				});
+				asyncTest('utf-8', function() {
+					var socket = sockets.connect('localhost:9999');
+					var m = 'åßå∂œ®¶•§∞®¢';
+					
+					socket.on('message', function(message) {
+						ok(message.data === m, 'utf-8');
+						socket.destroy();
+						start();
+					});
+					socket.send({method:'echo', data:m});
+				});
+				asyncTest('utf-8 + formatting', function() {
+					var socket = sockets.connect('localhost:9999');
+					var m = 'åßå∂œ®¶•§∞®¢\n\n\n\n\n\n\t\t\\\r\r';
+					
+					socket.on('message', function(message) {
+						ok(message.data === m, 'utf-8');
+						socket.destroy();
+						start();
+					});
+					socket.send({method:'echo', data:m});
+				});
+				asyncTest('ordering', 10, function() {
+					var socket = sockets.connect('localhost:9999');
+					var rcvd = 0;
+					
+					socket.on('message', function(message) {
+						ok(message.rcvd === rcvd, 'order not intact, rcvd='+message.rcvd+', expected='+rcvd);
+						rcvd++;
+						if (rcvd === 10) {
+							socket.destroy();
+							start();							
+						}
+					});
+					
+					for (var i = 0; i < 10; i++) {
+						socket.send({method:'echo', rcvd:i});						
+					}
+				});
+				asyncTest('buffering -> ordering', 10, function() {
+					var socket = sockets.connect('localhost:9999');
+					var rcvd = 0;
+					
+					socket.on('message', function(message) {
+						ok(message.rcvd === rcvd, 'order not intact, rcvd='+message.rcvd+', expected='+rcvd);
+						rcvd++;
+						if (rcvd === 10) {
+							socket.destroy();
+							start();							
+						}
+					});
+					
+					socket.on('open', function() {
+						for (var i = 5; i < 10; i++) {
+							socket.send({method:'echo', rcvd:i});						
+						}	
+					});
+					for (var i = 0; i < 5; i++) {
+						socket.send({method:'echo', rcvd:i});						
+					}
+				});
+				asyncTest('large message', function() {
+					var socket = sockets.connect('localhost:9999');
+					var large = new Array(1000).join('xXx');
+					
+					socket.on('message', function(message) {
+						ok(message.large === large, 'bad echo');
+						socket.destroy();
+						start();
+					});
+					socket.send({method:'echo', large:large});
+				});
+				asyncTest('large message flood', 40, function() {
+					var socket = sockets.connect('localhost:9999');
+					var large = new Array(1000).join('xXx');
+					var j = 0;
+					
+					socket.on('message', function(message) {
+						ok(message.large === large, 'bad echo');
+						ok(message.i === j, 'ordering');
+						
+						j++;
+						if (j === 20) {
+							socket.destroy();
+							start();							
+						}
+					});
+					
+					for (var i = 0; i < 20; i++) {
+						socket.send({method:'echo', large:large, i:i});						
+					}
+				});
+				asyncTest('server flood', 20, function() {
+					var socket = sockets.connect('localhost:9999');
+					var i = 0;
+										
+					socket.on('message', function(message) {
+						ok(i === message.data, 'fits');
+						i++;
+						if (i === 20) {
+							socket.destroy();
+							start();
+						}
+					});
+					socket.send({method:'flood'});
+					
+				});
+				asyncTest('server close', function() {
+					var socket = sockets.connect('localhost:9999');
+					
+					socket.on('close', function() {
+						ok(true, 'server closed');
+						start();
+					});
+					
+					socket.send({method:'close'});					
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1 id='qunit-header'>JSON-Sockets <span id='qunit-header-type'></span></h1>
+		<h2 id='qunit-banner'></h2>
+		<div id='qunit-testrunner-toolbar'></div>
+		<h2 id='qunit-userAgent'></h2>
+		<ol id='qunit-tests'></ol>
+		<div id='qunit-fixture'>test markup, will be hidden</div>
+	</body>
+</html>

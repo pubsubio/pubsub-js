@@ -1,11 +1,11 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<script src='pubsub.io.js'></script>
+		<script src='../pubsub.io.js'></script>
 		<script>
 			window.onload = function() {
 				var pre = document.getElementsByTagName('pre')[0];
-				var pubsub = pubsubio.connect('localhost:9999');
+				var pubsub = pubsubio.connect('hub.pubsub.io/'+Math.random());
 
 				pubsub.subscribe({}, function(doc) {
 					pre.innerHTML = JSON.stringify(doc);

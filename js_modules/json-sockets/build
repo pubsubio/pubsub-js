@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "(function(module, exports) {" > json-sockets.js
+mud inline index.js >> json-sockets.js
+echo "}({browser:true}, window.sockets = {}));" >> json-sockets.js

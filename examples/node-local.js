@@ -1,4 +1,4 @@
-var pubsub = require('./index').connect();
+var pubsub = require('../index').connect();
 
 pubsub.subscribe({}, function(doc) {
 	console.log(doc);

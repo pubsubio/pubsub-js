@@ -69,6 +69,16 @@ var createRequest = function(host) {
 	return new Request(host);
 };
 
+
+var tick = function() {
+	var now = common.encode((new Date()).getTime());
+	var cnt = 0;
+
+	return function() {
+		return common.encode(cnt++) + now;		
+	};
+}();
+
 var LongPoll = common.emitter(function(host) {
 	this.reader = createRequest(host);
 	this.writer = createRequest(host);
@@ -76,6 +86,7 @@ var LongPoll = common.emitter(function(host) {
 	var self = this;
 	var reader = this.reader;
 	var writer = this.writer;
+	var cnt = 0;
 
 	this.type = 'longpoll-'+reader.type;
 	this.destroyed = false;
@@ -86,7 +97,7 @@ var LongPoll = common.emitter(function(host) {
 	};
 	var oncreate = function(id) {
 		var buffer = [];
-		
+
 		var read = function(data) {
 			if (data) {
 				data = data.split('\n');
@@ -98,12 +109,11 @@ var LongPoll = common.emitter(function(host) {
 					self.emit('message', JSON.parse(data[i]));								
 				}
 			}
-			
-			self._ping = setInterval(function() {
-				self._send('ping');
-			}, PING_INTERVAL);
-			
-			reader.get('/read?id='+id, common.fork(onerror, read));
+			if (self.destroyed) {
+				return;
+			}
+					
+			reader.get('/read?id='+id+'&t='+tick(), common.fork(onerror, read));
 		};
 		var flush = function() {
 			if (buffer.length) {
@@ -120,14 +130,18 @@ var LongPoll = common.emitter(function(host) {
 		};
 		var send = self._send = function(message) {
 			self._send = pusher;
-			writer.post('/write?id='+id, message+'\n', common.fork(onerror, flush));
+			writer.post('/write?id='+id+'&t='+tick(), message+'\n', common.fork(onerror, flush));
 		};					
+		
+		self._ping = setInterval(function() {
+			self._send('ping');
+		}, PING_INTERVAL);
 		
 		read();
 		self.emit('open');					
 	};
 	
-	reader.get('/create', common.fork(onerror, oncreate));
+	reader.get('/create?t='+tick(), common.fork(onerror, oncreate));
 });
 
 LongPoll.prototype.send = function(message) {
@@ -138,7 +152,7 @@ LongPoll.prototype.destroy = function() {
 		return;
 	}
 	clearInterval(this._ping);
-	
+
 	this.destroyed = true;
 	this.reader.destroy();
 	this.writer.destroy();
@@ -150,10 +164,7 @@ LongPoll.prototype._send = function() {
 };
 
 var Socket = common.emitter(function(host) {
-	var ws = new WebSocket('ws://' + host + '/json-sockets');
-	
-	this._ws = ws;
-	
+	var ws = this._ws = new WebSocket('ws://'+host+'/json-sockets');
 	var self = this;
 	var ping;
 	
@@ -162,7 +173,7 @@ var Socket = common.emitter(function(host) {
 			ws.send('ping');
 		}, PING_INTERVAL);
 		
-		self.emit('open');		
+		self.emit('open');			
 	};
 	ws.onmessage = function(e) {
 		if (e.data === 'pong') {
@@ -181,6 +192,10 @@ Socket.prototype.type = 'web-socket';
 Socket.prototype.send = function(message) {
 	this._ws.send(JSON.stringify(message));
 };
+Socket.prototype.destroy = function() {
+	this._ws.close();
+};
+
 
 var CrossBrowser = window.WebSocket ? Socket : LongPoll;
 
@@ -199,13 +214,30 @@ var SocketBuffer = common.emitter(function(host) {
 	this._buffer = [];
 	
 	onload(function() {
+		if (self._destroyed) {
+			return;
+		}
 		var sock = self._sock = new CrossBrowser(host);
+		var destroyed = false;
+		
+		var destroy = function() {
+			sock.destroy();
+		};
+		
+		self.destroy = function() {
+			destroyed = true;
+		};
 		
 		sock.on('open', function() {
+			if (destroyed) {
+				destroy();
+				return;
+			}
 			while (self._buffer.length) {
 				self._send(self._buffer.shift());
 			}
 			self.send = self._send;
+			self.destroy = destroy;
 
 			self.emit('open');
 		});
@@ -221,6 +253,11 @@ var SocketBuffer = common.emitter(function(host) {
 SocketBuffer.prototype.send = function(message) {
 	this._buffer.push(message);
 };
+SocketBuffer.prototype.destroy = function() {
+	this._destroyed = true;
+	this.emit('close');
+};
+
 
 SocketBuffer.prototype._send = function(message) {
 	this._sock.send(message);
