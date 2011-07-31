@@ -1,6 +1,10 @@
 var sockets = require('json-sockets');
 var common = require('common');
 
+if (typeof JSON === 'undefined') {
+	JSON = require('JSON')
+}
+
 var noop = function() {};
 
 var parse = function(host) {
@@ -36,7 +40,7 @@ exports.connect = function(host) {
 	var socket = sockets.connect(host.host + ':' + host.port);
 
 	var pubsub = {};
-	var subscriptions = {};	
+	var subscriptions = {};
 	
 	socket.send({sub:host.sub});
 	
@@ -45,7 +49,8 @@ exports.connect = function(host) {
 			(subscriptions[message.id] || noop)(message.doc);
 		}
 	});
-
+	
+	pubsub.signer = exports.signer;
 	pubsub.subscribe = function(query, selection, callback) {
 		if (!callback) {
 			callback = selection;
@@ -74,11 +79,13 @@ if (!module.browser) {
 	var signer = require("signer");
 
 	exports.signer = function(secret) {	
+		var sign = signer.create(typeof secret === 'string' ? new Buffer(secret, 'base64') : secret);
+		
 		return function(doc) {
 			var signed = {};
 		
 			for (var i in doc) {
-				signed[i] = {$signed:signer.sign(i.replace(/\//g, '-')+'/'+doc[i]), value:doc[i]};
+				signed[i] = {$signature:sign.sign(i.replace(/\//g, '-') + '/' + doc[i]), value:doc[i]};
 			}
 			return signed;
 		};

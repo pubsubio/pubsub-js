@@ -254,7 +254,6 @@ var onload = function(fn) {
 var SocketBuffer = common.emitter(function(host) {
 	var self = this;
 	
-	this.type = CrossBrowser.prototype.type;
 	this._buffer = [];
 	
 	onload(function() {
@@ -268,6 +267,7 @@ var SocketBuffer = common.emitter(function(host) {
 			sock.destroy();
 		};
 		
+		self.type = sock.type;
 		self.destroy = function() {
 			destroyed = true;
 		};
@@ -448,7 +448,7 @@ exports.step = function(funcs, onerror) {
 		counter = completed = 0;
 		values = [];
 		complete = false;
-		fn.apply(state, pointer < funcs.length ? args : [value, next]);
+		fn.apply(state, pointer < funcs.length ? args : [value]);
 		complete = true;
 
 		if (counter && check()) {
@@ -753,7 +753,8 @@ require.define("JSON", function(module, exports) {
 // Create a JSON object only if one does not already exist. We create the
 // methods in a closure to avoid creating global variables.
 
-if (typeof JSON === 'undefined') {
+var JSON;
+if (!JSON) {
     JSON = {};
 }
 
@@ -1263,6 +1264,10 @@ exports.jsonp2 = function() {
 var sockets = require('json-sockets');
 var common = require('common');
 
+if (typeof JSON === 'undefined') {
+	JSON = require('JSON')
+}
+
 var noop = function() {};
 
 var parse = function(host) {
@@ -1291,6 +1296,19 @@ var normalize = function(query) {
 	}
 	return query;
 };
+var Signer = function(signed) {
+	this.$signature = signed.$signature;
+	this.value = signed.value;
+};
+Signer.prototype.toJSON = function() {
+	return {value: this.value, $signature: this.$signature};
+};
+Signer.prototype.valueOf = function() {
+	return this.value;
+};
+Signer.prototype.toString = function() {
+	return this.value;
+};
 
 exports.connect = function(host) {
 	host = parse(host);
@@ -1298,7 +1316,7 @@ exports.connect = function(host) {
 	var socket = sockets.connect(host.host + ':' + host.port);
 
 	var pubsub = {};
-	var subscriptions = {};	
+	var subscriptions = {};
 	
 	socket.send({sub:host.sub});
 	
@@ -1307,7 +1325,8 @@ exports.connect = function(host) {
 			(subscriptions[message.id] || noop)(message.doc);
 		}
 	});
-
+	
+	pubsub.signer = exports.signer;
 	pubsub.subscribe = function(query, selection, callback) {
 		if (!callback) {
 			callback = selection;
@@ -1336,11 +1355,13 @@ if (!module.browser) {
 	var signer = require("signer");
 
 	exports.signer = function(secret) {	
+		var sign = signer.create(typeof secret === 'string' ? new Buffer(secret, 'base64') : secret);
+		
 		return function(doc) {
 			var signed = {};
 		
 			for (var i in doc) {
-				signed[i] = {$signed:signer.sign(i.replace(/\//g, '-')+'/'+doc[i]), value:doc[i]};
+				signed[i] = new Signer({$signature:sign.sign(i.replace(/\//g, '-') + '/' + doc[i]), value:doc[i]});
 			}
 			return signed;
 		};
